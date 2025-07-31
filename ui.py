@@ -254,12 +254,17 @@ class ApngConverter(QMainWindow):
         # RESET PROGRESS
         self.reset_progress()
 
-        # SAVE SETTINGS
-        if self.ui.savesettings_CHB.isChecked():
-            self.save_settings()
+        # CAPTURE LATEST SETTINGS FROM UI FIRST
+        current_settings = self.get_current_settings()
 
-        # CAPTURE LATEST SETTINGS FROM UI
-        self.settings = self.get_current_settings()
+        # SAVE SETTINGS (using the captured settings)
+        if self.ui.savesettings_CHB.isChecked():
+            self.settings = current_settings
+            self.settings_data[self.settings_name] = self.settings.copy()
+            save_settings(self.settings, self.settings_name)
+
+        # USE THE CAPTURED SETTINGS FOR PROCESSING
+        self.settings = current_settings
 
         # VALIDATE SETTINGS
         errors = validate_settings(self.settings)
@@ -276,7 +281,10 @@ class ApngConverter(QMainWindow):
         for directory_wig in self.drop_widget.directories:
             thread = threading.Thread(
                 target=self.process_directory,
-                args=(directory_wig,),
+                args=(
+                    directory_wig,
+                    current_settings,
+                ),  # Pass settings directly
             )
             threads.append(thread)
             thread.start()
@@ -302,10 +310,10 @@ class ApngConverter(QMainWindow):
     def update_directory_progress(self, progress, directory_wig):
         directory_wig.progress_PBR.setValue(progress)
 
-    def process_directory(self, directory_wig):
+    def process_directory(self, directory_wig, settings):
         processor = APNGProcessor(
             seq_dir=directory_wig.folder_LED.text(),
-            settings=self.settings,
+            settings=settings,
         )
         processor.progress_changed.connect(
             lambda progress: self.update_progress(progress)
@@ -358,8 +366,10 @@ class ApngConverter(QMainWindow):
 
     def add_new_setting(self, setting_name):
         """Adds a new setting to the UI and saves the settings file"""
-        save_settings(self.settings, setting_name)
-        self.settings_data[setting_name] = self.settings.copy()
+        # Use current UI state instead of old self.settings
+        current_settings = self.get_current_settings()
+        save_settings(current_settings, setting_name)
+        self.settings_data[setting_name] = current_settings.copy()
         self.ui.settings_CBX.addItem(setting_name)
         index = self.ui.settings_CBX.findText(setting_name)
         self.ui.settings_CBX.setCurrentIndex(index)

@@ -76,9 +76,9 @@ def validate_settings(settings):
     """Validate settings"""
     errors = []
 
-    # THESE JUST NEED SOME VALUE
-    exists_settings = ["width", "height", "framerate", "output_path"]
-    for setting in exists_settings:
+    # THESE JUST NEED SOME VALUE (but output_path can be empty)
+    required_settings = ["width", "height", "framerate"]
+    for setting in required_settings:
         if not settings.get(setting):
             errors.append(f"Must specify {setting}.")
 
@@ -96,7 +96,8 @@ def validate_settings(settings):
         #         )
         #         errors.append(f"{e}")
 
-    if settings.get("output_path"):
+    # Only validate output_path if it's not empty
+    if settings.get("output_path") and settings.get("output_path").strip():
         if not os.path.isdir(settings.get("output_path")):
             errors.append(
                 f"Output path does not exist: '{settings.get('output_path')}'."

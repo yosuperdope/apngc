@@ -297,6 +297,11 @@ class APNGProcessor(QObject):
 
     def _assemble_apng(self, seq, basename):
         out_dir = self.settings.get("output_path")
+
+        # If output_path is blank or empty, use the parent directory of the input sequence
+        if not out_dir or out_dir.strip() == "":
+            out_dir = os.path.dirname(self.seq_dir)
+
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
 

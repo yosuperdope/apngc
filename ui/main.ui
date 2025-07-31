@@ -398,7 +398,11 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_2">
             <item>
-             <widget class="QLineEdit" name="output_LED"/>
+             <widget class="QLineEdit" name="output_LED">
+              <property name="placeholderText">
+               <string>Parent directory of each sequence (default)</string>
+              </property>
+             </widget>
             </item>
             <item>
              <widget class="QPushButton" name="browse_BTN">
