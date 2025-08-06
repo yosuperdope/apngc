@@ -3,7 +3,15 @@ import os
 import sys
 import threading
 
-from PySide6.QtCore import QFile, QObject, QRegularExpression, Qt, Signal
+from PySide6.QtCore import (
+    QFile,
+    QObject,
+    QRegularExpression,
+    Qt,
+    QTimer,
+    QUrl,
+    Signal,
+)
 from PySide6.QtGui import (
     QIcon,
     QPainter,
@@ -12,6 +20,7 @@ from PySide6.QtGui import (
     QRegion,
     QRegularExpressionValidator,
 )
+from PySide6.QtMultimedia import QSoundEffect
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import (
     QApplication,
@@ -133,6 +142,9 @@ class ApngConverter(QMainWindow):
 
         self.settings_data = {}
         self.total_progress = 0
+
+        # Initialize sound effect
+        self.sound_effect = QSoundEffect()
 
         # LOAD UI
         self.ui = load_ui("main")
@@ -292,6 +304,29 @@ class ApngConverter(QMainWindow):
             # SET FOCUS (ON MAC NO PROGRESS IS UPDATED WITHOUT THIS)
             directory_wig.folder_LED.setFocus()
 
+    def _play_sound(self, sound_path):
+        """Play a sound file using PySide6 QSoundEffect."""
+        try:
+            # Convert to absolute path
+            abs_path = os.path.abspath(sound_path)
+
+            # Set the sound source
+            self.sound_effect.setSource(QUrl.fromLocalFile(abs_path))
+
+            # Set volume (optional)
+            self.sound_effect.setVolume(0.5)
+
+            # Play the sound
+            self.sound_effect.play()
+
+            LOGGER.debug(f"Playing sound: {abs_path}")
+
+        except Exception as e:
+            LOGGER.warning(f"Failed to play sound with QSoundEffect: {e}")
+            # Fallback: try to log more details about the error
+            LOGGER.debug(f"Sound file exists: {os.path.exists(sound_path)}")
+            LOGGER.debug(f"Sound file path: {sound_path}")
+
     def reset_progress(self):
         self.total_progress = 0
         self.ui.progress_PBR.setValue(0)
@@ -306,6 +341,14 @@ class ApngConverter(QMainWindow):
 
         if self.total_progress >= 100:
             self.enable_ui(True)
+            # Play completion sound
+            try:
+                complete_path = os.path.join(
+                    os.path.dirname(__file__), "audio", "complete.wav"
+                )
+                self._play_sound(complete_path)
+            except Exception as e:
+                LOGGER.warning(f"Failed to play completion sound: {e}")
 
     def update_directory_progress(self, progress, directory_wig):
         directory_wig.progress_PBR.setValue(progress)

@@ -400,7 +400,7 @@
             <item>
              <widget class="QLineEdit" name="output_LED">
               <property name="placeholderText">
-               <string>Parent directory of each sequence (default)</string>
+               <string>Same as input (default)</string>
               </property>
              </widget>
             </item>
